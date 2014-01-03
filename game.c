@@ -239,7 +239,7 @@ void send_game_state(client_t *client, game_t *game) {
             /* Buffer is set to maximum possible size, but the actual message
              * is terminated by 0 so client can get the actual length
              */
-            buff = (char *) malloc(100 + GAME_CODE_LEN + strlen(STRINGIFY(GAME_MAX_LOBBY_TIME_SEC)));
+            buff = (char *) malloc(100 + GAME_CODE_LEN + 11);
             
             /* Get players that are playing */
             for(i = 0; i < 4; i++) {
@@ -550,7 +550,7 @@ void leave_game(client_t *client) {
                     }
                 }
                 
-                len = 30 + strlen(STRINGIFY(GAME_MAX_PLAY_TIME_SEC));
+                len = 30 + 11;
                 buff = (char *) malloc(len);
                                 
                 /* Notify other players that one left */
@@ -620,7 +620,7 @@ void start_game(client_t *client) {
             
             /* Broadcast clients */
             /* GAME_MAX_LOBBY_TIME_SEC is expected to be bigger */
-            buff = (char *) malloc(16 + strlen(STRINGIFY(GAME_MAX_LOBBY_TIME_SEC)));
+            buff = (char *) malloc(16 + 11);
             sprintf(buff, 
                     "GAME_STARTED;%d;%d", 
                     game->game_state.playing,
