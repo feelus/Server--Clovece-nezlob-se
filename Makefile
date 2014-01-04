@@ -1,14 +1,14 @@
 CC = gcc
 CFLAGS = -Wall -pedantic
-LDFLAGS+= -pthread
-BIN = ups-server
+LDFLAGS += -pthread -lm
+BIN = cns_server
 OBJ = queue.o err.o global.o logger.o client.o server.o sender.o receiver.o game.o game_watchdog.o com.o main.o
 
 %.o: %.c
-	$(CC) -c $(LDFLAGS) $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@ $(LDFLAGS)
 
 $(BIN): $(OBJ)
-	$(CC) $(LDFLAGS) $^ -o $@
+	$(CC) $^ -o $@ $(LDFLAGS)
 
 clean:
 	rm -rf *.o $(BIN)
