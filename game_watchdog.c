@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -71,7 +71,7 @@ void *start_watchdog(void *arg) {
                                         game->game_index
                                         );
                                 
-                                log_line(log_buffer, LOG_INFO);
+                                log_line(log_buffer, LOG_DEBUG);
                                 
                                 broadcast_game(game, "GAME_LEFT", NULL, 0);
                                 
@@ -92,7 +92,7 @@ void *start_watchdog(void *arg) {
                                     game->game_index
                                     );
 
-                            log_line(log_buffer, LOG_INFO);
+                            log_line(log_buffer, LOG_DEBUG);
                             
                             broadcast_game(game, "GAME_LEFT", NULL, 0);
                             
@@ -110,7 +110,7 @@ void *start_watchdog(void *arg) {
                                 game->game_index
                                 );
 
-                        log_line(log_buffer, LOG_INFO);
+                        log_line(log_buffer, LOG_DEBUG);
                         
                         broadcast_game(game, "GAME_LEFT", NULL, 0);
                         

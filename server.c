@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -39,6 +39,9 @@
 #include "com.h"
 #include "game.h"
 #include "logger.h"
+
+/* Server started */
+struct timeval ts_start;
 
 /* Logger buffer */
 char log_buffer[LOG_BUFFER_SIZE];
@@ -73,7 +76,7 @@ void init_server(char *bind_ip, int port) {
     
     /* Log */
     sprintf(log_buffer,
-            "Started server with IP %s and port %d",
+            "Starting server with IP %s and port %d",
             bind_ip,
             port
             );
@@ -132,11 +135,24 @@ void process_dgram(char *dgram, struct sockaddr_in *addr) {
             
             if(client) {
                 send_ack(client, 1, 0);
+                send_reconnect_code(client);
                 
                 /* Release client */
                 release_client(client);
             }
             
+        }
+        /* Reconnect */
+        else if(strncmp(type, "RECONNECT", 9) == 0) {            
+            client = get_client_by_index(get_client_index_by_rcode(strtok(NULL, ";")));
+            
+            if(client) {
+                /* Sends ACK aswell after resetting clients SEQ_ID */
+                reconnect_client(client, addr);
+                
+                /* Release client */
+                release_client(client);
+            }
         }
         /* Client should already exist */
         else {

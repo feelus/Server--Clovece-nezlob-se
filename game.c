@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -97,7 +97,7 @@ game_t* get_game_by_code(char *code) {
  * with locked mutex. Mutex has to be released manually.
  */
 game_t* get_game_by_index(unsigned int index) {
-    if(MAX_CONCURRENT_CLIENTS > index) {
+    if(index>= 0 && MAX_CONCURRENT_CLIENTS > index) {
         if(games[index]) {
                 pthread_mutex_lock(&games[index]->mtx_game);
         
@@ -200,7 +200,7 @@ void create_game(client_t *client) {
                 game->game_index
                 );
         
-        log_line(log_buffer, LOG_INFO);
+        log_line(log_buffer, LOG_DEBUG);
         
         /* Set clients game code */
         client->game_index = game->game_index;
@@ -239,7 +239,7 @@ void send_game_state(client_t *client, game_t *game) {
             /* Buffer is set to maximum possible size, but the actual message
              * is terminated by 0 so client can get the actual length
              */
-            buff = (char *) malloc(100 + GAME_CODE_LEN + 11);
+            buff = (char *) malloc(105 + GAME_CODE_LEN + 11);
             
             /* Get players that are playing */
             for(i = 0; i < 4; i++) {
@@ -258,7 +258,7 @@ void send_game_state(client_t *client, game_t *game) {
              * and timeout before next state change (lobby timeout, playing timeout)
              */
             sprintf(buff,
-                    "GAME_STATE;%s;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%d",
+                    "GAME_STATE;%s;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%u;%d;%d",
                     game->code,
                     game->state, 
                     player[0],
@@ -283,7 +283,8 @@ void send_game_state(client_t *client, game_t *game) {
                     game->game_state.figures[15],
                     game->game_state.playing,
                     client_game_index,
-                    game_time_before_timeout(game)
+                    game_time_before_timeout(game),
+                    game->game_state.playing_rolled
                     );
             
             enqueue_dgram(client, buff, 1);
@@ -315,7 +316,7 @@ void remove_game(game_t **game, client_t *skip) {
                 (*game)->game_index
                 );
         
-        log_line(log_buffer, LOG_INFO);
+        log_line(log_buffer, LOG_DEBUG);
         
         /* Set all player's game index to - 1 */
         for(i = 0; i < 4; i++) {
@@ -373,7 +374,9 @@ void broadcast_game(game_t *game, char *msg, client_t *skip, int send_skip) {
                 }
                 
                 if(client != NULL) {
-                    enqueue_dgram(client, msg, 1);
+                    if(client->state) {
+                        enqueue_dgram(client, msg, 1);
+                    }
                     
                     if(release) {
                         /* Release client */
@@ -440,7 +443,7 @@ void join_game(client_t *client, char* game_code) {
                         game->game_index
                         );
                 
-                log_line(log_buffer, LOG_INFO);
+                log_line(log_buffer, LOG_DEBUG);
 
             }
             /* Game is full */
@@ -453,7 +456,7 @@ void join_game(client_t *client, char* game_code) {
                         game->game_index
                         );
                 
-                log_line(log_buffer, LOG_INFO);
+                log_line(log_buffer, LOG_DEBUG);
                 
                 enqueue_dgram(client, "GAME_FULL", 1);
             }
@@ -468,7 +471,7 @@ void join_game(client_t *client, char* game_code) {
                     game->game_index
                     );
 
-            log_line(log_buffer, LOG_INFO);
+            log_line(log_buffer, LOG_DEBUG);
             
             enqueue_dgram(client, "GAME_RUNNING", 1);
         }
@@ -485,7 +488,7 @@ void join_game(client_t *client, char* game_code) {
                 game_code
                 );
 
-        log_line(log_buffer, LOG_INFO);
+        log_line(log_buffer, LOG_DEBUG);
         
         enqueue_dgram(client, "GAME_NONEXISTENT", 1);
     }
@@ -515,7 +518,7 @@ void leave_game(client_t *client) {
                     game->game_index
                     );
             
-            log_line(log_buffer, LOG_INFO);
+            log_line(log_buffer, LOG_DEBUG);
             
             if(game->player_num == 1) {
                 
@@ -525,7 +528,7 @@ void leave_game(client_t *client) {
             else {
                 
                 for(i = 0; i < 4; i++) {
-                    /* If pointer to the address is same */
+                    /* If client index matches */
                     if(game->player_index[i] == client->client_index) {
                         game->player_index[i] = -1;
                         game->player_num--;
@@ -553,12 +556,13 @@ void leave_game(client_t *client) {
                 len = 30 + 11;
                 buff = (char *) malloc(len);
                                 
+                /* @TODO: if he wasnt playing do something else */
                 /* Notify other players that one left */
                 sprintf(buff, 
                         "CLIENT_LEFT_GAME;%d;%d;%d", 
                         i, 
                         game->game_state.playing,
-                        GAME_MAX_PLAY_TIME_SEC
+                        GAME_MAX_PLAY_TIME_SEC - 1
                         );
                 
                 broadcast_game(game, buff, NULL, 0);
@@ -580,6 +584,70 @@ void leave_game(client_t *client) {
 }
 
 /**
+ * int timeout_game(client_t *client)
+ * 
+ * Changes game state if one of the players timeouts. He has a maximum amount of  
+ * time set by MAX_CLIENT_TIMEOUT_SEC to reconnect
+ */
+int timeout_game(client_t *client) {
+    int i;
+    char buff[40];
+    game_t *game = get_game_by_index(client->game_index);
+    
+    if(game) {
+        if(game->state) {
+            /* Log */
+            sprintf(log_buffer,
+                    "Client with index %d timeouted from game with code %s and index %d, can reconnect",
+                    client->client_index,
+                    game->code,
+                    game->game_index
+                    );
+
+            log_line(log_buffer, LOG_DEBUG);
+
+            /* Wont wait for timeouted player if he is alone in game */
+            if(game->player_num > 1) {
+                for(i = 0; i < 4; i++) {
+                    if(game->player_index[i] == client->client_index) {
+                        break;
+                    }
+                }
+                
+                if(game->game_state.playing == i) {
+                    set_game_playing(game);
+                }
+                
+                sprintf(buff, 
+                        "CLIENT_TIMEOUT;%d;%d;%d", 
+                        i, 
+                        game->game_state.playing,
+                        GAME_MAX_PLAY_TIME_SEC - 1
+                        );
+                
+                /* Mark client as inactive */
+                client->state = 0;
+                
+                broadcast_game(game, buff, client, 0);
+                
+                /* Release game */
+                release_game(game);
+                
+                /* Update clients timestamp (starts countdown for max timeout time) */
+                update_client_timestamp(client);
+
+                return 1;
+            }
+            else {
+                remove_game(&game, client);
+            }
+        }
+    }
+    
+    return 0;
+}
+
+/**
  * void start_game(client_t *client)
  * 
  * Attempts to start a game given client is in. Game has to be in state 0 (waiting),
@@ -593,7 +661,7 @@ void start_game(client_t *client) {
     if(client->game_index != -1) {
         game = get_game_by_index(client->game_index);
         
-        if(game && !game->state && game->player_num > 0) {  
+        if(game && !game->state && game->player_num > 0 && !all_players_finished(game)) {  
             /* Log */
             sprintf(log_buffer,
                     "Client with index %d started game with code %s and index %d",
@@ -602,7 +670,7 @@ void start_game(client_t *client) {
                     game->game_index
                     );
             
-            log_line(log_buffer, LOG_INFO);
+            log_line(log_buffer, LOG_DEBUG);
             
             game->state = 1;
             
@@ -651,6 +719,7 @@ void start_game(client_t *client) {
 void set_game_playing(game_t *game) {
     int cur = game->game_state.playing;
     int i = 0;
+    client_t *client;
     
     /* Reset rolled number */
     game->game_state.playing_rolled = -1;
@@ -659,18 +728,31 @@ void set_game_playing(game_t *game) {
         cur = 0;
     }
     
-    for(i = 1; i < 4; i++) {
-        
-        if(game->player_index[(cur + i) % 4] != -1 && 
-                game->game_state.finished[(cur + i) % 4] == -1) {
-            
-            game->game_state.playing = (cur + i) % 4;
-            
-            break;
-            
+    if(game->player_num > 1) {
+        for(i = 1; i < 4; i++) {
+            if(game->player_index[(cur + i) % 4] != -1 &&
+                    get_player_finish_pos(game, ((cur + i) % 4)) == -1) {
+                
+                client = get_client_by_index(game->player_index[(cur + i) % 4]);
+                
+                if(client) {
+                    if(client->state) {
+                        game->game_state.playing = (cur + i ) % 4;
+                        
+                        /* Release client */
+                        release_client(client);
+                        
+                        break;
+                    }
+                    
+                    /* Release client */
+                    release_client(client);
+                }
+                        
+            }
         }
-        
     }
+    
     
     if(player_has_figures_on_field(game, game->game_state.playing)) {
         game->game_state.playing_rolled_times = 3;
@@ -777,7 +859,7 @@ void roll_die(client_t *client) {
                     rolled
                     );
             
-            log_line(log_buffer, LOG_INFO);
+            log_line(log_buffer, LOG_DEBUG);
             
             /* Player hs no figures that can move */
             if(!can_player_play(game, game->game_state.playing)) {
@@ -1141,7 +1223,7 @@ void move_figure(client_t *client, unsigned int figure_index) {
                                     dest_index
                                     );
                             
-                            log_line(log_buffer, LOG_INFO);
+                            log_line(log_buffer, LOG_DEBUG);
                             
                             /* Check if player finished */
                             if(dest_index >= 40 && has_all_figures_at_home(game, game->game_state.playing)) {
@@ -1155,7 +1237,7 @@ void move_figure(client_t *client, unsigned int figure_index) {
                                                 game->game_index
                                                 );
                                         
-                                        log_line(log_buffer, LOG_INFO);
+                                        log_line(log_buffer, LOG_DEBUG);
                                         
                                         game->game_state.finished[i] = game->game_state.playing;
                                         
@@ -1173,7 +1255,7 @@ void move_figure(client_t *client, unsigned int figure_index) {
                                         game->game_index
                                         );
                                 
-                                log_line(log_buffer, LOG_INFO);
+                                log_line(log_buffer, LOG_DEBUG);
                                 
                                 broadcast_game_finish(game, client);
                                 
@@ -1235,6 +1317,18 @@ int find_home(int figure_index) {
     return (figure_index + 56);
 }
 
+int get_player_finish_pos(game_t *game, int index) {
+    int i;
+    
+    for(i = 0; i < 4; i++) {
+        if(game->game_state.finished[i] == index) {
+            return i;
+        }
+    }
+    
+    return -1;
+}
+
 /**
  * int all_players_finished(game_t *game)
  * 
@@ -1250,7 +1344,7 @@ int all_players_finished(game_t *game) {
     for(i = 0; i < 4; i++) {
         /* Check if player exists and if he's marked as finished */
         if(game->player_index[i] != -1 &&
-                game->game_state.finished[i] == -1) {
+                get_player_finish_pos(game, i) == -1) {
             
             unfinished++;
             unfinished_index = i;
@@ -1304,10 +1398,10 @@ void broadcast_game_finish(game_t *game, client_t *skip) {
     
     sprintf(msg,
             "GAME_FINISHED;%d;%d;%d;%d",
-            game->game_state.finished[0],
-            game->game_state.finished[1],
-            game->game_state.finished[2],
-            game->game_state.finished[3]
+            get_player_finish_pos(game, 0),
+            get_player_finish_pos(game, 1),
+            get_player_finish_pos(game, 2),
+            get_player_finish_pos(game, 3)
             );
     
     broadcast_game(game, msg, skip, 1);

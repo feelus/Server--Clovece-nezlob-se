@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -99,6 +99,7 @@ void remove_game(game_t **game, client_t *client);
 void broadcast_game(game_t *game, char *msg, client_t *skip, int send_skip);
 void join_game(client_t *client, char* game_code);
 void leave_game(client_t *client);
+int timeout_game(client_t *client);
 void start_game(client_t *client);
 void set_game_playing(game_t *game);
 int player_has_figures_on_field(game_t *game, unsigned int player_index);
@@ -111,6 +112,7 @@ int can_player_play(game_t *game, unsigned int player_index);
 int can_figure_move(game_t *game, unsigned int figure_index, unsigned int *d_index);
 void move_figure(client_t *client, unsigned int figure_index);
 int find_home(int figure_index);
+int get_player_finish_pos(game_t *game, int index);
 int all_players_finished(game_t *game);
 int has_all_figures_at_home(game_t *game, int player_index);
 void broadcast_game_finish(game_t *game, client_t *skip);

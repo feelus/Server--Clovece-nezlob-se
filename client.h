@@ -17,17 +17,22 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
 #ifndef CLIENT_H
 #define	CLIENT_H
 
+#define RECONNECT_CODE_LEN 4
+
 #include <sys/time.h>
 
 #include "queue.h"
 #include "global.h"
+
+/* Reconnect codes */
+extern char *reconnect_code[MAX_CONCURRENT_CLIENTS];
 
 /* Global client number */
 extern unsigned int client_num;
@@ -60,16 +65,23 @@ typedef struct {
     /* Current game index */
     unsigned int game_index;
     
+    /* Reconnect code */
+    char *reconnect_code;
+    
 } client_t;
 
 /* Function prototypes */
 void add_client(struct sockaddr_in *addr);
+void reconnect_client(client_t *client, struct sockaddr_in *addr);
 client_t* get_client_by_addr(struct sockaddr_in *addr);
 client_t* get_client_by_index(int index);
 void release_client(client_t *client);
 void remove_client(client_t **client);
 void update_client_timestamp(client_t *client);
 void clear_all_clients();
+int get_client_index_by_rcode(char *code);
+int generate_reconnect_code(char *s, int iteration);
+void send_reconnect_code(client_t *client);
 
 #endif	/* CLIENT_H */
 

@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -32,6 +32,7 @@
 #include "server.h"
 #include "logger.h"
 #include "err.h"
+#include "com.h"
 
 /**
  * void *start_receiving(void *arg)
@@ -59,8 +60,12 @@ void *start_receiving(void *arg) {
                 (struct sockaddr *) &client_addr, &client_len);
         
         /* Got data */
-        if(n > 0) {
+        if(n > 0) {            
             process_dgram(dgram, &client_addr);
+            
+            /* Stats */
+            recv_bytes += n;
+            recv_dgrams++;
         }
     }
     

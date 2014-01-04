@@ -18,7 +18,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -35,6 +35,17 @@
 #include "server.h"
 #include "sender.h"
 #include "logger.h"
+
+/* Number of sent bytes */
+unsigned int sent_bytes = 0;
+/* Number of sent datagrams */
+unsigned int sent_dgrams = 0;
+/* Number of received bytes */
+unsigned int recv_bytes = 0;
+/* Number of received datagrams */
+unsigned int recv_dgrams = 0;
+/* Number of client connections (total) */
+unsigned int num_connections = 0;
 
 /* Logger buffer */
 char log_buffer[LOG_BUFFER_SIZE];
@@ -79,6 +90,8 @@ void enqueue_dgram(client_t *client, char *msg, int req_ack) {
         }
         
         if(sent_immediately && !req_ack) {
+            free(packet->msg);
+            free(packet->payload);
             free(packet);
         }
         else {
@@ -147,6 +160,10 @@ void send_packet(packet_t *pkt, client_t *client) {
             );
     
     log_line(log_buffer, LOG_DEBUG);
+    
+    /* Stats */
+    sent_bytes += strlen(pkt->payload + 1);
+    sent_dgrams++;
 }
 
 /**
@@ -209,6 +226,13 @@ int client_timestamp_timeout(client_t *client) {
     return ( ( cur_tv.tv_sec - (client)->timestamp.tv_sec > MAX_CLIENT_NORESPONSE_SEC ) );
 }
 
+int client_timestamp_remove(client_t *client) {
+    struct timeval cur_tv;
+    gettimeofday(&cur_tv, NULL);
+
+    return ( ( cur_tv.tv_sec - (client)->timestamp.tv_sec > MAX_CLIENT_TIMEOUT_SEC ) );
+}
+
 
 /**
  * void send_ack(client_t *client, int seq_id, int resend)
@@ -262,6 +286,10 @@ void send_ack(client_t *client, int seq_id, int resend) {
         
         /* Update client's timestamp */
         update_client_timestamp(client);
+        
+        /* Stats */
+        sent_bytes += strlen(buff + 1);
+        sent_dgrams++;
         
         free(buff);
     }
@@ -340,6 +368,10 @@ void inform_server_full(struct sockaddr_in *addr) {
     
     log_line(log_buffer, LOG_DEBUG);
     
+    /* Stats */
+    sent_bytes += strlen(buff + 1);
+    sent_dgrams++;
+    
     sprintf(buff,
             "%s;1;ACK;1",
             STRINGIFY(APP_TOKEN)
@@ -361,6 +393,10 @@ void inform_server_full(struct sockaddr_in *addr) {
             );
     
     log_line(log_buffer, LOG_DEBUG);
+    
+    /* Stats */
+    sent_bytes += strlen(buff);
+    sent_dgrams++;
     
     free(buff);
 }

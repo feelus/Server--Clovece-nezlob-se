@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -30,6 +30,14 @@
 #include <netdb.h> 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <sys/time.h>
+#include <math.h>
+
+#include "logger.h"
+#include "server.h"
+
+/* Logger buffer */
+char log_buffer[LOG_BUFFER_SIZE];
 
 /**
  * void gen_random(char *s, const int len)
@@ -109,4 +117,24 @@ int hostname_to_ip(char *hostname, char *ip) {
     }
     
     return 0;
+}
+
+/**
+ * void display_uptime()
+ * 
+ * Shows amount of time elapsed from server start
+ */
+void display_uptime() {
+    struct timeval temp_tv;
+    
+    gettimeofday(&temp_tv, NULL);
+
+    /* Elapsed time */
+    sprintf(log_buffer,
+            "Server uptime: %01.0fh:%02.0fm:%02.0fs",
+            floor( (temp_tv.tv_sec - ts_start.tv_sec) / 3600.),
+            floor(fmod((temp_tv.tv_sec - ts_start.tv_sec), 3600.0) / 60.0),
+            fmod((temp_tv.tv_sec - ts_start.tv_sec), 60.0)
+            );
+    log_line(log_buffer, LOG_ALWAYS);
 }

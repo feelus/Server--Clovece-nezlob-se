@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -34,7 +34,7 @@
 /* Current log level, can be changed during runtime */
 int log_level = LOG_WARN;
 /* Current verbose level, can be changed during runtime  */
-int verbose_level = LOG_DEBUG;
+int verbose_level = LOG_INFO;
 
 /* Output logfile */
 FILE *logfile = NULL;
@@ -60,11 +60,11 @@ void init_logger(char *filename) {
     buff = (char *) malloc(strlen(filename) + 19);
     
     sprintf(buff,
-            "Logging to file: %s\n",
+            "Logging to file: %s",
             filename
             );
     
-    fputs(buff, stdout);
+    log_line(buff, LOG_ALWAYS);
     
     free(buff);
     fprintf(logfile, "\n--------------------------------------------------------\n");

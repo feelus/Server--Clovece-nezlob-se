@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -78,11 +78,9 @@ void *start_sending(void *arg) {
                     /* Check if client's timestamp is too old */
                     if(client_timestamp_timeout(client)) {
                         
-                        if(client->game_index != -1) {
-                            leave_game(client);
-                        }
+                        /* Attempt to timeout player in current game */
+                        timeout_game(client);
                         
-                        remove_client(&client);
                     } 
                     else if(queue_size(client->dgram_queue) > 0) {
                         packet = queue_front(client->dgram_queue);
@@ -109,7 +107,13 @@ void *start_sending(void *arg) {
                         }
                     }
                 }
-                /* Inactive for way too long, can handle this */
+                else if(client_timestamp_remove(client)){
+                    if(client->game_index != -1) {
+                        leave_game(client);
+                    }
+                    
+                    remove_client(&client);
+                }
                 
                 if(client != NULL) {
                     release_client(client);

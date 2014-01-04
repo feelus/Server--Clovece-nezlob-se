@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -25,6 +25,9 @@
 #define	SERVER_H
 
 #include <netinet/in.h>
+
+/* Server started */
+extern struct timeval ts_start;
 
 /* Global server socket */
 extern int server_sockfd;

@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -59,6 +59,7 @@ void gen_random(char *s, const int len);
 int stop_thread(pthread_mutex_t *mtx);
 int rand_lim(int limit);
 int hostname_to_ip(char *hostname, char *ip);
+void display_uptime();
 
 #endif	/* GLOBAL_H */
 

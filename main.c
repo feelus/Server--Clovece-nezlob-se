@@ -17,7 +17,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -101,17 +101,62 @@ void help() {
  * frees all allocated memory, asks running threads to terminate and waits 
  * for them to finish.
  */
-void _shutdown() {
-    /* Inform clients about shutdown */
+void _shutdown() {        
     char *msg = "SERVER_SHUTDOWN";    
+    
+    log_line("SERV: Caught shutdown command.", LOG_ALWAYS);
+    log_line("SERV: Informing clients server is going down.", LOG_ALWAYS);
+    
+    /* Inform clients about shutdown */
     broadcast_clients(msg);
+    
+    log_line("#### START Stats ####", LOG_ALWAYS);
+    
+    /* Elapsed time */
+    display_uptime();
+    
+    /* Sent bytes*/
+    sprintf(log_buffer,
+            "Sent bytes (raw): %u",
+            sent_bytes
+            );
+    log_line(log_buffer, LOG_ALWAYS);
+    
+    /* Sent messages */
+    sprintf(log_buffer,
+            "Sent datagrams: %u",
+            sent_dgrams
+            );
+    log_line(log_buffer, LOG_ALWAYS);
+    
+    /* Received bytes */
+    sprintf(log_buffer,
+            "Received bytes (raw): %u",
+            recv_bytes
+            );
+    log_line(log_buffer, LOG_ALWAYS);
+    
+    /* Received messages */
+    sprintf(log_buffer,
+            "Received datagrams: %u",
+            recv_dgrams
+            );
+    log_line(log_buffer, LOG_ALWAYS);
+    
+    /* Total number of connections */
+    sprintf(log_buffer,
+            "Total # of connections: %u",
+            num_connections
+            );
+    log_line(log_buffer, LOG_ALWAYS);
+    
+    log_line("#### END Stats ####", LOG_ALWAYS);
     
     /* Clear clients */
     clear_all_clients();
     /* Clear games */
     clear_all_games();
     
-    log_line("SERV: Caught shutdown command.", LOG_ALWAYS);
     log_line("SERV: Asking threads to terminate.", LOG_ALWAYS);
     
     pthread_mutex_unlock(&mtx_thr_watchdog);
@@ -139,6 +184,9 @@ void run(int argc, char **argv) {
     struct in_addr tmp_addr;
     int port;
     int tmp_num;
+    
+    /* Get start timestamp */
+    gettimeofday(&ts_start, NULL);
     
     /* Init logger first */
     if(argc >= 4) {
@@ -316,6 +364,11 @@ void run(int argc, char **argv) {
                         }
                     }
                 }
+            }
+            
+            /* Get server uptime */
+            else if(strncmp(user_input_buffer, "uptime", 6) == 0) {
+                display_uptime();
             }
         }
     }

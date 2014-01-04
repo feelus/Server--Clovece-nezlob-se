@@ -17,9 +17,10 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
+
 #ifndef LOGGER_H
 #define	LOGGER_H
 
@@ -28,8 +29,8 @@
 #define LOG_NONE 0
 #define LOG_ERR 1
 #define LOG_WARN 2
-#define LOG_DEBUG 3
-#define LOG_INFO 4
+#define LOG_INFO 3
+#define LOG_DEBUG 4
 #define LOG_ALL 5
 
 #define DEFAULT_LOGFILE ups_servlog.log

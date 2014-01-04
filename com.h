@@ -18,7 +18,7 @@
  * -----------------------------------------------------------------------------
  * 
  * @author: Martin Kucera, 2014
- * @version: 1.0
+ * @version: 1.02
  * 
  */
 
@@ -26,6 +26,19 @@
 #define	COM_H
 
 #include <time.h>
+
+#include "client.h"
+
+/* Number of sent bytes */
+extern unsigned int sent_bytes;
+/* Number of sent datagrams */
+extern unsigned int sent_dgrams;
+/* Number of received bytes */
+extern unsigned int recv_bytes;
+/* Number of received datagrams */
+extern unsigned int recv_dgrams;
+/* Number of client connections (total) */
+extern unsigned int num_connections;
 
 typedef struct {
     /* Packet sequential ID */
@@ -51,6 +64,7 @@ void build_packet_payload(packet_t *pkt);
 void send_packet(packet_t *pkt, client_t *client);
 int packet_timestamp_old(packet_t pkt, int *wait);
 int client_timestamp_timeout(client_t *client);
+int client_timestamp_remove(client_t *client);
 void send_ack(client_t *client, int seq_id, int resend);
 void recv_ack(client_t *client, int seq_id);
 void inform_server_full(struct sockaddr_in *addr);
