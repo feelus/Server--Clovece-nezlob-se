@@ -1370,8 +1370,6 @@ int all_players_finished(game_t *game) {
     int unfinished = 0;
     int unfinished_index = -1;
     
-    printf("Entering player finished..\n");
-    
     for(i = 0; i < 4; i++) {
         /* Check if player exists and if he's marked as finished */
         if(game->player_index[i] != -1 &&
@@ -1386,8 +1384,6 @@ int all_players_finished(game_t *game) {
             
         }
     }
-    
-    printf("Leaving player finished..\n");
     
     if(unfinished_index != -1) {
         game->game_state.finished[game->player_num - 1] = unfinished_index;
