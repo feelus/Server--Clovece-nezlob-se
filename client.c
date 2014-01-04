@@ -274,14 +274,12 @@ client_t* get_client_by_index(int index) {
  * 
  * Tries to release client's mutex
  */
-void release_client(client_t *client) {
-    if(pthread_mutex_trylock(&client->mtx_client) == 0) {
-        
-        log_line("Tried to unlock non locked mutex, returning.", LOG_DEBUG);
-        
-    }
-    else {        
+void release_client(client_t *client) {    
+    if(client && pthread_mutex_trylock(&client->mtx_client) != 0) {
         pthread_mutex_unlock(&client->mtx_client);
+    }
+    else {
+        log_line("Tried to release non-locked client", LOG_WARN);
     }
 }
 

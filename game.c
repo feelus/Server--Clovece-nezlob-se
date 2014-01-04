@@ -59,7 +59,7 @@ void generate_game_code(char *code, unsigned int iteration) {
     gen_random(code, GAME_CODE_LEN);
     existing_game = get_game_by_code(code);
     
-    if(existing_game != NULL) {
+    if(existing_game) {
         release_game(existing_game);
         generate_game_code(code, iteration++);
     }
@@ -114,7 +114,7 @@ game_t* get_game_by_index(unsigned int index) {
  * Checks if the mutex of given game is locked, if so, unlocks it.
  */
 void release_game(game_t *game) {
-    if(pthread_mutex_trylock(&game->mtx_game) != 0) {
+    if(game && pthread_mutex_trylock(&game->mtx_game) != 0) {
         pthread_mutex_unlock(&game->mtx_game);
     }
     else {
@@ -425,7 +425,7 @@ void join_game(client_t *client, char* game_code) {
         game = get_game_by_code(game_code);
     }
     
-    if(game != NULL) {
+    if(game) {
         if(!game->state) {
             /* If we have a spot */
             if(game->player_num < 4) {
@@ -529,7 +529,7 @@ void leave_game(client_t *client) {
     if(client != NULL) {
         game = get_game_by_index(client->game_index);
         
-        if(game != NULL) {
+        if(game) {
             /* Log */
             sprintf(log_buffer,
                     "Client with index %d is leaving game with code %s and index %d",
@@ -595,7 +595,7 @@ void leave_game(client_t *client) {
             
             enqueue_dgram(client, "GAME_LEFT", 1);
             
-            if(game != NULL) {
+            if(game) {
                 /* Release game */
                 release_game(game);
             }
@@ -649,10 +649,7 @@ int timeout_game(client_t *client) {
                 client->state = 0;
                 
                 broadcast_game(game, buff, client, 0);
-                
-                /* Release game */
-                release_game(game);
-                
+                                
                 /* Update clients timestamp (starts countdown for max timeout time) */
                 update_client_timestamp(client);
 
@@ -661,6 +658,11 @@ int timeout_game(client_t *client) {
             else {
                 remove_game(&game, client);
             }
+        }
+        
+        if(game) {
+            /* Release game */
+            release_game(game);
         }
     }
     
@@ -1262,6 +1264,8 @@ void move_figure(client_t *client, unsigned int figure_index) {
                                         
                                         log_line(log_buffer, LOG_DEBUG);
                                         
+                                        printf("putting finished player at pos %d\n", i);
+                                        
                                         game->game_state.finished[i] = game->game_state.playing;
                                         
                                         break;
@@ -1386,6 +1390,8 @@ int all_players_finished(game_t *game) {
     }
     
     if(unfinished_index != -1) {
+        printf("putting uninished player %d at index %d\n",
+                unfinished_index, game->player_num - 1);
         game->game_state.finished[game->player_num - 1] = unfinished_index;
     }
     
