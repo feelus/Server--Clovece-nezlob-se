@@ -139,74 +139,76 @@ void create_game(client_t *client) {
     unsigned int message_len;
     int i = 0;
     
-    game_t *game = (game_t *) malloc(sizeof(game_t));
-    
-    /* Update game timestamp */
-    gettimeofday(&game->timestamp, NULL);
-    game->state = 0;
-    game->player_num = 1;
-    
-    pthread_mutex_init(&game->mtx_game, NULL);
-    
-    memset(game->player_index, -1, sizeof(int) * 4);
-    game->player_index[0] = client->client_index;
-    
-    game->code = (char *) malloc(GAME_CODE_LEN + 1);    
-    generate_game_code(game->code, 0);
-    
-    if(game->code[0] != 0) {        
-        /* Find empty game index */
-        for(i = 0; i < MAX_CONCURRENT_CLIENTS; i++) {
-            if(games[i] == NULL) {
-                games[i] = game;
-                game->game_index = i;
+    if(client->game_index == -1) {
+        game_t *game = (game_t *) malloc(sizeof(game_t));
 
-                break;
+        /* Update game timestamp */
+        gettimeofday(&game->timestamp, NULL);
+        game->state = 0;
+        game->player_num = 1;
+
+        pthread_mutex_init(&game->mtx_game, NULL);
+
+        memset(game->player_index, -1, sizeof(int) * 4);
+        game->player_index[0] = client->client_index;
+
+        game->code = (char *) malloc(GAME_CODE_LEN + 1);    
+        generate_game_code(game->code, 0);
+
+        if(game->code[0] != 0) {        
+            /* Find empty game index */
+            for(i = 0; i < MAX_CONCURRENT_CLIENTS; i++) {
+                if(games[i] == NULL) {
+                    games[i] = game;
+                    game->game_index = i;
+
+                    break;
+                }
             }
+
+            game_num++;
+
+            /* Place figures at their starting position */
+            for(i = 0; i < 16; i++) {
+                game->game_state.figures[i] = 56 + i;
+                game->game_state.fields[56 + i] = i;
+            }
+
+            /* Set fields to empty */
+            memset(game->game_state.fields, -1, (72 * sizeof(int)));        
+            /* Set finished positions to empty */
+            memset(game->game_state.finished, -1, (4 * sizeof(short int)));
+
+            game->game_state.playing_rolled_times = 0;
+            game->game_state.playing_rolled = -1;
+
+            /* Set invalid next playing on purpose */
+            game->game_state.playing = 100;
+
+            /* Prepare message for client */
+            sprintf(buff, "%d", ( GAME_MAX_LOBBY_TIME_SEC - 1));
+            message_len = strlen(buff) + GAME_CODE_LEN + 14 + 1;
+            message = (char *) malloc(message_len);
+
+            sprintf(message, "GAME_CREATED;%s;%d", game->code, GAME_MAX_LOBBY_TIME_SEC - 1);
+
+            enqueue_dgram(client, message, 1);
+
+            /* Log */
+            sprintf(log_buffer,
+                    "Created new game with code %s and index %d",
+                    game->code,
+                    game->game_index
+                    );
+
+            log_line(log_buffer, LOG_DEBUG);
+
+            /* Set clients game index */
+            client->game_index = game->game_index;
+
+            free(message);
         }
-        
-        game_num++;
-        
-        /* Place figures at their starting position */
-        for(i = 0; i < 16; i++) {
-            game->game_state.figures[i] = 56 + i;
-            game->game_state.fields[56 + i] = i;
-        }
-        
-        /* Set fields to empty */
-        memset(game->game_state.fields, -1, (72 * sizeof(int)));        
-        /* Set finished positions to empty */
-        memset(game->game_state.finished, -1, (4 * sizeof(short int)));
-        
-        game->game_state.playing_rolled_times = 0;
-        game->game_state.playing_rolled = -1;
-        
-        /* Set invalid next playing on purpose */
-        game->game_state.playing = 100;
-        
-        /* Prepare message for client */
-        sprintf(buff, "%d", ( GAME_MAX_LOBBY_TIME_SEC - 1));
-        message_len = strlen(buff) + GAME_CODE_LEN + 14 + 1;
-        message = (char *) malloc(message_len);
-        
-        sprintf(message, "GAME_CREATED;%s;%d", game->code, GAME_MAX_LOBBY_TIME_SEC - 1);
-        
-        enqueue_dgram(client, message, 1);
-        
-        /* Log */
-        sprintf(log_buffer,
-                "Created new game with code %s and index %d",
-                game->code,
-                game->game_index
-                );
-        
-        log_line(log_buffer, LOG_DEBUG);
-        
-        /* Set clients game code */
-        client->game_index = game->game_index;
-        
-        free(message);
-    }    
+    }
 }
 
 /**

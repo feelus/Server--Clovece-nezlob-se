@@ -200,7 +200,7 @@ int packet_timestamp_old(packet_t pkt, int *wait) {
     }
     
     /* Debug */
-    if(cur_wait > 0) {
+    if(cur_wait <= 0) {
         sprintf(log_buffer,
                 "Packet with payload %s and SEQ_ID %d timeouted",
                 pkt.payload,
@@ -210,7 +210,7 @@ int packet_timestamp_old(packet_t pkt, int *wait) {
         log_line(log_buffer, LOG_DEBUG);
     }
 
-    return (cur_wait > 0);
+    return (cur_wait <= 0);
 }
 
 /**
