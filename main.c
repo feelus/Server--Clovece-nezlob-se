@@ -370,6 +370,16 @@ void run(int argc, char **argv) {
             else if(strncmp(user_input_buffer, "uptime", 6) == 0) {
                 display_uptime();
             }
+            
+            /* Get current number of clients (event timeouted) */
+            else if(strncmp(user_input_buffer, "playercount", 11) == 0) {
+                sprintf(log_buffer,
+                        "Current number of clients (including timeouted) is %d",
+                        client_num
+                        );
+                
+                log_line(log_buffer, LOG_ALWAYS);
+            }
         }
     }
 }

@@ -70,7 +70,7 @@ void *start_sending(void *arg) {
             /* Get client (lock) */
             client = get_client_by_index(i);
             
-            if(client != NULL) {
+            if(client) {
                 got_clients++;
                
                 /* If client is active */
@@ -80,6 +80,7 @@ void *start_sending(void *arg) {
                         
                         /* Attempt to timeout player in current game */
                         timeout_game(client);
+                        client->state = 0;
                         
                     } 
                     else if(queue_size(client->dgram_queue) > 0) {
@@ -115,7 +116,7 @@ void *start_sending(void *arg) {
                     remove_client(&client);
                 }
                 
-                if(client != NULL) {
+                if(client) {
                     release_client(client);
                 }
             }

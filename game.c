@@ -99,9 +99,9 @@ game_t* get_game_by_code(char *code) {
 game_t* get_game_by_index(unsigned int index) {
     if(index>= 0 && MAX_CONCURRENT_CLIENTS > index) {
         if(games[index]) {
-                pthread_mutex_lock(&games[index]->mtx_game);
-        
-                return games[index];
+            pthread_mutex_lock(&games[index]->mtx_game);
+
+            return games[index];
         }
     }
     
@@ -647,14 +647,14 @@ int timeout_game(client_t *client) {
                         GAME_MAX_PLAY_TIME_SEC - 1
                         );
                 
-                /* Mark client as inactive */
-                client->state = 0;
-                
                 broadcast_game(game, buff, client, 0);
                                 
                 /* Update clients timestamp (starts countdown for max timeout time) */
                 update_client_timestamp(client);
 
+                /* Release game */
+                release_game(game);
+                
                 return 1;
             }
             else {

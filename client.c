@@ -260,7 +260,7 @@ client_t* get_client_by_addr(struct sockaddr_in *addr) {
  * If no client is at that index, returns NULL. 
  */
 client_t* get_client_by_index(int index) {
-    if(index>= 0 && MAX_CONCURRENT_CLIENTS > index && clients[index] != NULL) {        
+    if(index>= 0 && MAX_CONCURRENT_CLIENTS > index && clients[index]) {    
         pthread_mutex_lock(&clients[index]->mtx_client);
         
         return clients[index];
