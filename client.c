@@ -38,6 +38,7 @@
 #include "com.h"
 #include "logger.h"
 #include "game.h"
+#include "server.h"
 
 /* Array of connected clients */
 client_t *clients[MAX_CONCURRENT_CLIENTS] = {NULL};
@@ -140,10 +141,31 @@ void add_client(struct sockaddr_in *addr) {
 void reconnect_client(client_t *client, struct sockaddr_in *addr) {
     char buff[100];
     int i;
-    packet_t *pkt;
     game_t *game;
         
     if(client) {
+        /* First check if client was still logged in */
+        if(client->state) {
+            /* Inform client that connection was closed */
+            sprintf(buff,
+                    "%s;1;CONN_CLOSE",
+                    STRINGIFY(APP_TOKEN)
+                    );
+            
+            sendto(
+                    server_sockfd,
+                    buff,
+                    strlen(buff),
+                    0,
+                    (struct sockaddr *) client->addr,
+                    sizeof(*(client->addr))
+            );
+            
+            /* Stats */
+            sent_bytes += strlen(buff + 1);
+            sent_dgrams++;
+        }
+        
         client->state = 1;
         client->pkt_recv_seq_id = 1;
         client->pkt_send_seq_id = 1;      
@@ -154,21 +176,8 @@ void reconnect_client(client_t *client, struct sockaddr_in *addr) {
         /* Copy address */
         memcpy(client->addr, addr, sizeof(struct sockaddr_in));
         
-        pkt = queue_front(client->dgram_queue);
-        
-        while(pkt) {
-            queue_pop(client->dgram_queue, 0);
-            
-            /* Check if payload was built before freeing */
-            if(pkt->state) {
-                free(pkt->payload);
-            }
-            
-            free(pkt->msg);
-            free(pkt);
-            
-            pkt = queue_front(client->dgram_queue);
-        }
+        /* Clear packet queue */
+        clear_client_dgram_queue(client);
         
         inet_ntop(AF_INET, &addr->sin_addr, client->addr_str, INET_ADDRSTRLEN);
         
@@ -345,6 +354,9 @@ void clear_all_clients() {
         if(client) {
             clients[i] = NULL;
             
+            /* Empty packet queue */
+            clear_client_dgram_queue(client);
+            
             free(client->addr);
             free(client->addr_str);
             free(client->dgram_queue);
@@ -353,6 +365,29 @@ void clear_all_clients() {
             pthread_mutex_unlock(&client->mtx_client);
             free(client);
         }
+    }
+}
+
+/**
+ * void clear_client_dgram_queue(client_t *client)
+ * 
+ * Removes all packets from client's output queue and frees all alocated
+ * memory
+ */
+void clear_client_dgram_queue(client_t *client) {
+    packet_t *packet = queue_front(client->dgram_queue);
+    
+    while(packet) {
+        queue_pop(client->dgram_queue, 0);
+        
+        if(packet->state) {
+            free(packet->payload);
+        }
+        
+        free(packet->msg);
+        free(packet);
+        
+        packet = queue_front(client->dgram_queue);
     }
 }
 

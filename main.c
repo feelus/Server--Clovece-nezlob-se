@@ -102,7 +102,7 @@ void help() {
  * for them to finish.
  */
 void _shutdown() {        
-    char *msg = "SERVER_SHUTDOWN";    
+    char *msg = "CONN_CLOSE";    
     
     log_line("SERV: Caught shutdown command.", LOG_ALWAYS);
     log_line("SERV: Informing clients server is going down.", LOG_ALWAYS);

@@ -79,6 +79,7 @@ void release_client(client_t *client);
 void remove_client(client_t **client);
 void update_client_timestamp(client_t *client);
 void clear_all_clients();
+void clear_client_dgram_queue(client_t *client);
 int get_client_index_by_rcode(char *code);
 int generate_reconnect_code(char *s, int iteration);
 void send_reconnect_code(client_t *client);
