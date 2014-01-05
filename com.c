@@ -162,7 +162,7 @@ void send_packet(packet_t *pkt, client_t *client) {
     log_line(log_buffer, LOG_DEBUG);
     
     /* Stats */
-    sent_bytes += strlen(pkt->payload + 1);
+    sent_bytes += strlen(pkt->payload);
     sent_dgrams++;
 }
 
@@ -288,7 +288,7 @@ void send_ack(client_t *client, int seq_id, int resend) {
         update_client_timestamp(client);
         
         /* Stats */
-        sent_bytes += strlen(buff + 1);
+        sent_bytes += strlen(buff);
         sent_dgrams++;
         
         free(buff);
@@ -369,7 +369,7 @@ void inform_server_full(struct sockaddr_in *addr) {
     log_line(log_buffer, LOG_DEBUG);
     
     /* Stats */
-    sent_bytes += strlen(buff + 1);
+    sent_bytes += strlen(buff);
     sent_dgrams++;
     
     sprintf(buff,

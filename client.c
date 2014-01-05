@@ -162,7 +162,7 @@ void reconnect_client(client_t *client, struct sockaddr_in *addr) {
             );
             
             /* Stats */
-            sent_bytes += strlen(buff + 1);
+            sent_bytes += strlen(buff);
             sent_dgrams++;
         }
         
