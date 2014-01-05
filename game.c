@@ -1258,10 +1258,11 @@ void move_figure(client_t *client, unsigned int figure_index) {
                                     if(game->game_state.finished[i] == -1) {
                                         /* Log */
                                         sprintf(log_buffer,
-                                                "Client with index %d in game with code %s and index %d finished",
+                                                "Client with index %d in game with code %s and index %d finished at pos %d",
                                                 client->client_index,
                                                 game->code,
-                                                game->game_index
+                                                game->game_index,
+                                                i
                                                 );
                                         
                                         log_line(log_buffer, LOG_DEBUG);
@@ -1389,7 +1390,7 @@ int all_players_finished(game_t *game) {
         }
     }
     
-    if(unfinished_index != -1) {
+    if(unfinished_index != -1) {        
         game->game_state.finished[game->player_num - 1] = unfinished_index;
     }
     
@@ -1431,10 +1432,10 @@ void broadcast_game_finish(game_t *game, client_t *skip) {
     
     sprintf(msg,
             "GAME_FINISHED;%d;%d;%d;%d",
-            get_player_finish_pos(game, 0),
-            get_player_finish_pos(game, 1),
-            get_player_finish_pos(game, 2),
-            get_player_finish_pos(game, 3)
+            game->game_state.finished[0],
+            game->game_state.finished[1],
+            game->game_state.finished[2],
+            game->game_state.finished[3]
             );
     
     broadcast_game(game, msg, skip, 1);
