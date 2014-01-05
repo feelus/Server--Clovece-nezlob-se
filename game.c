@@ -950,8 +950,6 @@ char* get_playing_index_message(game_t *game) {
             GAME_MAX_PLAY_TIME_SEC
             );
     
-    free(buff);
-    
     return buff;
 }
 
