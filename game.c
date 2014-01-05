@@ -950,6 +950,8 @@ char* get_playing_index_message(game_t *game) {
             GAME_MAX_PLAY_TIME_SEC
             );
     
+    free(buff);
+    
     return buff;
 }
 
@@ -1264,8 +1266,6 @@ void move_figure(client_t *client, unsigned int figure_index) {
                                         
                                         log_line(log_buffer, LOG_DEBUG);
                                         
-                                        printf("putting finished player at pos %d\n", i);
-                                        
                                         game->game_state.finished[i] = game->game_state.playing;
                                         
                                         break;
@@ -1390,8 +1390,6 @@ int all_players_finished(game_t *game) {
     }
     
     if(unfinished_index != -1) {
-        printf("putting uninished player %d at index %d\n",
-                unfinished_index, game->player_num - 1);
         game->game_state.finished[game->player_num - 1] = unfinished_index;
     }
     

@@ -61,7 +61,7 @@ char log_buffer[LOG_BUFFER_SIZE];
 */
 void help() {
     printf("NAME:\n");
-    printf("\t\t server_cns - Simple board game\n");
+    printf("\t\t cns_server - Simple board game\n");
     
     printf("--------------------------------------------------\n");
     printf("USAGE:\n");

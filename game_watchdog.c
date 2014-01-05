@@ -57,7 +57,7 @@ void *start_watchdog(void *arg) {
                 /* Game is running */
                 if(game->state) {
                     /* If player pick timeouted */
-                    if(game_time_before_timeout(game) <= 0) {
+                    if(game_time_before_timeout(game) < 0) {
                         /* Check if there is another player that can play */
                         if(game->player_num > 1) {
                             /* If game stayed in active state without anyone
@@ -102,7 +102,7 @@ void *start_watchdog(void *arg) {
                 }
                 /* Game is in lobby */
                 else {
-                    if(game_time_before_timeout(game) <= 0) {
+                    if(game_time_before_timeout(game) < 0) {
                         /* Log */
                         sprintf(log_buffer,
                                 "Game with code %s and index %i TIMEOUT",
