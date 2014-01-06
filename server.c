@@ -106,11 +106,17 @@ void process_dgram(char *dgram, struct sockaddr_in *addr) {
     client_t *client;
     /* Generic unsigned int var */
     unsigned int generic_uint;
+    /* String representation of address */
+    char addr_str[INET_ADDRSTRLEN];
+
+    inet_ntop(AF_INET, &addr->sin_addr, addr_str, INET_ADDRSTRLEN);
     
     /* Log */
     sprintf(log_buffer,
-            "DATA_IN: %s",
-            dgram
+            "DATA_IN: %s <--- %s:%d",
+            dgram,
+	    addr_str,
+	    htons(addr->sin_port)
             );
     log_line(log_buffer, LOG_DEBUG);
     

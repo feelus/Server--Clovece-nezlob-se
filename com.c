@@ -155,8 +155,10 @@ void send_packet(packet_t *pkt, client_t *client) {
     sendto(server_sockfd, pkt->payload, strlen(pkt->payload), 0, (struct sockaddr*) pkt->addr, sizeof(*pkt->addr));
     
     sprintf(log_buffer,
-            "DATA_OUT: %s",
-            pkt->payload
+            "DATA_OUT: %s ---> %s:%d",
+            pkt->payload,
+	    client->addr_str,
+	    htons(client->addr->sin_port)
             );
     
     log_line(log_buffer, LOG_DEBUG);
@@ -274,8 +276,10 @@ void send_ack(client_t *client, int seq_id, int resend) {
         );
         
         sprintf(log_buffer,
-                "DATA_OUT: %s",
-                buff
+                "DATA_OUT: %s ---> %s:%d",
+                buff,
+		client->addr_str,
+		htons(client->addr->sin_port)
                 );
         
         log_line(log_buffer, LOG_DEBUG);
@@ -345,6 +349,9 @@ void recv_ack(client_t *client, int seq_id) {
  */
 void inform_server_full(struct sockaddr_in *addr) {
     char *buff = (char *) malloc(strlen(STRINGIFY(APP_TOKEN)) + 15);
+    char addr_str[INET_ADDRSTRLEN];
+
+    inet_ntop(AF_INET, &addr->sin_addr, addr_str, INET_ADDRSTRLEN);
     
     sprintf(buff,
             "%s;1;SERVER_FULL",
@@ -362,8 +369,10 @@ void inform_server_full(struct sockaddr_in *addr) {
     
     /* Log */
     sprintf(log_buffer,
-            "DATA_OUT: %s",
-            buff
+            "DATA_OUT: %s ---> %s:%d",
+            buff,
+	    addr_str,
+	    htons(addr->sin_port)
             );
     
     log_line(log_buffer, LOG_DEBUG);
@@ -388,8 +397,10 @@ void inform_server_full(struct sockaddr_in *addr) {
     
     /* Log */
     sprintf(log_buffer, 
-            "DATA_OUT: %s",
-            buff
+            "DATA_OUT: %s ---> %s:%d",
+            buff,
+            addr_str,
+	    htons(addr->sin_port)
             );
     
     log_line(log_buffer, LOG_DEBUG);
@@ -433,8 +444,10 @@ void broadcast_clients(char *msg) {
             
             /* Log */
             sprintf(log_buffer,
-                    "DATA_OUT: %s",
-                    buff
+                    "DATA_OUT: %s ---> %s:%d",
+                    buff,
+		    client->addr_str,
+		    htons(client->addr->sin_port)
                     );
             
             log_line(log_buffer, LOG_DEBUG);
