@@ -321,6 +321,7 @@ void remove_client(client_t **client) {
         /* Release client */
         release_client((*client));
         
+	clear_client_dgram_queue((*client));
         free((*client)->dgram_queue);
         free((*client));
     }
@@ -352,18 +353,7 @@ void clear_all_clients() {
         client = get_client_by_index(i);
         
         if(client) {
-            clients[i] = NULL;
-            
-            /* Empty packet queue */
-            clear_client_dgram_queue(client);
-            
-            free(client->addr);
-            free(client->addr_str);
-            free(client->dgram_queue);
-            free(client->reconnect_code);
-                        
-            pthread_mutex_unlock(&client->mtx_client);
-            free(client);
+            remove_client(&client);
         }
     }
 }
