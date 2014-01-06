@@ -1295,7 +1295,7 @@ void move_figure(client_t *client, unsigned int figure_index) {
                                  * if player has figures on field or player doesnt
                                  * have figures on field but rolled 3 times already
                                  */
-                                if( (game->game_state.playing_rolled != 6 ) && 
+                                if( (game->game_state.playing_rolled != 6 || get_player_finish_pos(game, game->game_state.playing) != -1) && 
                                         ( (player_has_figures_on_field(game, game->game_state.playing)) ||
                                         ( game->game_state.playing_rolled_times >= 3 ) ) ) {
 
