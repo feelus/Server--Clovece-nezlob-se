@@ -755,7 +755,7 @@ void set_game_playing(game_t *game) {
         cur = 0;
     }
     
-    if(game->player_num > 1) {
+    if(game->player_num >= 1) {
         for(i = 1; i < 4; i++) {
             if(game->player_index[(cur + i) % 4] != -1 &&
                     get_player_finish_pos(game, ((cur + i) % 4)) == -1) {
