@@ -99,6 +99,7 @@ int log_line(char *msg, int severity) {
         /* Write to log file */
         if(severity <= log_level) {
             fputs(buff, logfile);
+	    fflush(logfile);
         }
         
         /* Write to console */
