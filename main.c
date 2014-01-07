@@ -215,7 +215,7 @@ void run(int argc, char **argv) {
         /* Validate port */
         port = (int) strtoul(argv[2], NULL, 10);
         
-        if(port < 0 || port >= 65536) {
+        if(port <= 0 || port >= 65536) {
             help();
             raise_error("Port number is out of range.\n");
         }
