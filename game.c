@@ -804,7 +804,7 @@ int player_has_figures_on_field(game_t *game, unsigned int player_index) {
     
     for(i = 0; i < 4; i++) {
         if(game->game_state.figures[(base + i)] >= 0 && 
-                game->game_state.figures[(base + i)] <= 55) {
+                game->game_state.figures[(base + i)] < 40) {
             
             return 1;
             
