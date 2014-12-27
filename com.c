@@ -417,7 +417,7 @@ void inform_server_full(struct sockaddr_in *addr) {
  * 
  * Sends message to all connected clients
  */
-void broadcast_clients(char *msg) {
+void broadcast_clients(char *msg, int req_ack) {
     int i = 0;
     client_t *client;
     char *buff = (char *) malloc(strlen(msg) + strlen(STRINGIFY(APP_TOKEN)) + 13);
@@ -432,6 +432,10 @@ void broadcast_clients(char *msg) {
                     client->pkt_send_seq_id,
                     msg
                     );
+
+	    if(req_ack) {
+		client->pkt_send_seq_id++;
+            }
             
             sendto(
                     server_sockfd,

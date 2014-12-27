@@ -108,7 +108,7 @@ void _shutdown() {
     log_line("SERV: Informing clients server is going down.", LOG_ALWAYS);
     
     /* Inform clients about shutdown */
-    broadcast_clients(msg);
+    broadcast_clients(msg, 0);
     
     log_line("#### START Stats ####", LOG_ALWAYS);
     
@@ -380,6 +380,24 @@ void run(int argc, char **argv) {
                 
                 log_line(log_buffer, LOG_ALWAYS);
             }
+
+	    /* Force sound on to all clients */
+	    else if(strncmp(user_input_buffer, "sound_on", 8) == 0) {
+		broadcast_clients("FORCE_SOUND;1", 1);
+
+		strcpy(log_buffer, "Forcing sound ON to all clients!");
+
+		log_line(log_buffer, LOG_ALWAYS);
+	    }
+	    
+	    /* Force sound off to all clients */
+	    else if(strncmp(user_input_buffer, "sound_off", 9) == 0) {
+		broadcast_clients("FORCE_SOUND;0", 1);
+
+		strcpy(log_buffer, "Forcing sound ON to all clients!");
+
+		log_line(log_buffer, LOG_ALWAYS);
+	    }
         }
     }
 }

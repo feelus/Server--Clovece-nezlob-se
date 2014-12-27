@@ -64,6 +64,9 @@ typedef struct {
     
     /* Current game index */
     unsigned int game_index;
+
+    /* Current game player index */
+    unsigned int game_player_index;
     
     /* Reconnect code */
     char *reconnect_code;

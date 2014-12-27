@@ -97,6 +97,7 @@ void create_game(client_t *client);
 void send_game_state(client_t *client, game_t *game);
 void remove_game(game_t **game, client_t *client);
 void broadcast_game(game_t *game, char *msg, client_t *skip, int send_skip);
+void broadcast_message(client_t *client, char *message);
 void join_game(client_t *client, char* game_code);
 void leave_game(client_t *client);
 int timeout_game(client_t *client);

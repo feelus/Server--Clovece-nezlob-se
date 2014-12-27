@@ -68,7 +68,7 @@ int client_timestamp_remove(client_t *client);
 void send_ack(client_t *client, int seq_id, int resend);
 void recv_ack(client_t *client, int seq_id);
 void inform_server_full(struct sockaddr_in *addr);
-void broadcast_clients(char *msg);
+void broadcast_clients(char *msg, int oeq_ack);
 
 #endif	/* COM_H */
 

@@ -206,6 +206,9 @@ void create_game(client_t *client) {
             /* Set clients game index */
             client->game_index = game->game_index;
 
+	    /* Set clients game player index */
+	    client->game_player_index = 0;
+
             free(message);
         }
     }
@@ -412,6 +415,48 @@ void broadcast_game(game_t *game, char *msg, client_t *skip, int send_skip) {
 }
 
 /**
+* void broadcast_message(client_t *client, char* message)
+* 
+* Broadcasts chat message to all clients in client's game
+*/
+void broadcast_message(client_t *client, char* message) {
+    game_t *game;
+    char *buff;
+    unsigned len;
+
+    if(!message) {
+	return;
+    }
+
+    game = get_game_by_index(client->game_index);
+
+    if(game) {
+	if(game->player_num > 1) {
+	    len = strlen(message) + 10 + 1;
+	    buff = (char *) malloc(len);
+	    sprintf(buff, "MESSAGE;%d;%s", client->game_player_index, message);
+
+	    /* Send message to other clients */
+	    broadcast_game(game, buff, client, 0);
+	    
+	    /* Free buffer */
+	    free(buff);
+
+	    /* Log */
+	    sprintf(log_buffer,
+		    "Player with index %d sent message: %s",
+		    client->client_index,
+		    message
+   		    );
+
+	   log_line(log_buffer, LOG_INFO);
+	}
+
+	release_game(game);
+    }
+}
+
+/**
  * void join_game(client_t *client, char* game_code)
  * 
  * Tries to join a game with given code, if unsuccessful informs
@@ -448,6 +493,9 @@ void join_game(client_t *client, char* game_code) {
 
                 /* Set clients game index reference to this game */
                 client->game_index = game->game_index;
+
+		/* Set clients game player index */
+		client->game_player_index = i;
 
                 /* Send game state to joined client */
                 send_game_state(client, game);

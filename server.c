@@ -248,6 +248,14 @@ void process_dgram(char *dgram, struct sockaddr_in *addr) {
 
                         move_figure(client, generic_uint);
                     }
+
+		   else if(strncmp(type, "MESSAGE", 7) == 0) {
+			
+			/* ACK client */
+			send_ack(client, packet_seq_id, 0);
+			
+			broadcast_message(client, strtok(NULL, ";"));
+		   }
                                         
                 }
                 /* Packet was already processed */
